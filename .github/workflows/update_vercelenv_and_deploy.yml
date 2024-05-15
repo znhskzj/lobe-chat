@@ -1,4 +1,4 @@
-name: Update Vercel Env and Deploy
+name: Update Env and Deploy
 
 on:
   schedule:
@@ -19,7 +19,6 @@ jobs:
         new_access_code=$(date +%Y%m%d%H%M%S | sha256sum | base64 | head -c 12)
         echo "new_access_code=$new_access_code" >> $GITHUB_ENV
 
-    # 更新第一个 Vercel 项目的环境变量并重新部署
     - name: Update Vercel Project 1 environment variable
       env:
         VERCEL_PROJECT_ID_1: ${{ secrets.VERCEL_PROJECT_ID_1 }}
@@ -49,4 +48,14 @@ jobs:
             "forceNew": true
           }'
 
-    # 继续添加更多项目，按照上面的模式
+    - name: Send email with new access code
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: ${{ secrets.SMTP_SERVER_ADDRESS }}
+        server_port: ${{ secrets.SMTP_SERVER_PORT }}
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "New Access Code for Vercel Project"
+        to: ${{ secrets.ADMIN_EMAIL }}
+        body: "The new access code is ${{ env.new_access_code }}"
+        from: ${{ secrets.EMAIL_FROM }}

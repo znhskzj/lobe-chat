@@ -29,11 +29,13 @@ jobs:
         curl -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
-          -d '{
-            "key": "ACCESS_CODE",
-            "value": "'"$NEW_ACCESS_CODE"'",
-            "target": ["production", "preview", "development"]
-          }'
+          -d '[
+                {
+                  "key": "ACCESS_CODE",
+                  "value": "'"$NEW_ACCESS_CODE"'",
+                  "target": ["production", "preview", "development"]
+                }
+              ]'
         echo "Updated Vercel environment variable ACCESS_CODE with value: $NEW_ACCESS_CODE"
 
     - name: Trigger redeployment for Vercel project
@@ -45,9 +47,9 @@ jobs:
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
-            "name": "Vercel Deployment",
-            "project": "'$VERCEL_PROJECT_ID'"
-          }'
+                "projectId": "'$VERCEL_PROJECT_ID'",
+                "target": "production"
+              }'
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
 
     - name: Send email with new access code

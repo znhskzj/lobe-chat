@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Generate new access code
       id: generate-code
@@ -21,34 +21,45 @@ jobs:
         echo "The new access code is $new_access_code"  # 输出到日志
 
     - name: Update Vercel Project environment variable
+      id: update-env
       env:
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
         NEW_ACCESS_CODE: ${{ env.new_access_code }}
       run: |
-        curl -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/ACCESS_CODE" \
+        response=$(curl -s -o /dev/stderr -w "%{http_code}" -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/ACCESS_CODE" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
                 "value": "'"$NEW_ACCESS_CODE"'",
                 "target": ["production", "preview", "development"]
-              }'
+              }')
+        if [ "$response" -ne 200 ]; then
+          echo "Failed to update environment variable. Status code: $response"
+          exit 1
+        fi
         echo "Updated Vercel environment variable ACCESS_CODE with value: $NEW_ACCESS_CODE"
 
     - name: Trigger redeployment for Vercel project
+      id: redeploy
       env:
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
       run: |
-        curl -X POST "https://api.vercel.com/v13/deployments" \
+        response=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "https://api.vercel.com/v13/deployments" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'"
-              }'
+              }')
+        if [ "$response" -ne 201 ]; then
+          echo "Failed to trigger redeployment. Status code: $response"
+          exit 1
+        fi
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
 
     - name: Send email with new access code
+      if: success() # 只有在前面的步骤成功时才发送邮件
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: ${{ secrets.SMTP_SERVER_ADDRESS }}

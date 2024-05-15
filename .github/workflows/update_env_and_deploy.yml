@@ -23,7 +23,7 @@ jobs:
     - name: Update Vercel Project environment variable
       id: update-env
       env:
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
         NEW_ACCESS_CODE: ${{ env.new_access_code }}
       run: |

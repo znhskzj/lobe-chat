@@ -20,6 +20,11 @@ jobs:
         echo "new_access_code=$new_access_code" >> $GITHUB_ENV
         echo "The new access code is $new_access_code"  # 输出到日志
 
+    - name: Debug Secrets
+      run: |
+        echo "VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}"
+        echo "VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}"
+
     - name: Update Vercel Project environment variable
       id: update-env
       env:

@@ -20,10 +20,22 @@ jobs:
         echo "new_access_code=$new_access_code" >> $GITHUB_ENV
         echo "The new access code is $new_access_code"  # 输出到日志
 
-    - name: Debug Secrets
+    - name: Get environment variable ID
+      id: get-env-id
+      env:
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
+        VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
       run: |
-        echo "VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}"
-        echo "VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}"
+        response=$(curl -s -X GET "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env" \
+          -H "Authorization: Bearer $VERCEL_API_TOKEN" \
+          -H "Content-Type: application/json")
+        echo "Response: $response"
+        env_id=$(echo $response | jq -r '.envs[] | select(.key=="ACCESS_CODE") | .id')
+        if [ -z "$env_id" ]; then
+          echo "Failed to get environment variable ID"
+          exit 1
+        fi
+        echo "env_id=$env_id" >> $GITHUB_ENV
 
     - name: Update Vercel Project environment variable
       id: update-env
@@ -31,11 +43,12 @@ jobs:
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
         NEW_ACCESS_CODE: ${{ env.new_access_code }}
+        ENV_ID: ${{ env.env_id }}
       run: |
         echo "Updating Vercel Project ID: $VERCEL_PROJECT_ID"
         echo "Using API Token: $VERCEL_API_TOKEN"
         echo "New Access Code: $NEW_ACCESS_CODE"
-        response=$(curl -s -o /dev/stderr -w "%{http_code}" -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/ACCESS_CODE" \
+        response=$(curl -s -o /dev/stderr -w "%{http_code}" -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/$ENV_ID" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{

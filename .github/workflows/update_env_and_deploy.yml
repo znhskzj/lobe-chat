@@ -27,6 +27,9 @@ jobs:
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
         NEW_ACCESS_CODE: ${{ env.new_access_code }}
       run: |
+        echo "Updating Vercel Project ID: $VERCEL_PROJECT_ID"
+        echo "Using API Token: $VERCEL_API_TOKEN"
+        echo "New Access Code: $NEW_ACCESS_CODE"
         response=$(curl -s -o /dev/stderr -w "%{http_code}" -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/ACCESS_CODE" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
@@ -34,6 +37,7 @@ jobs:
                 "value": "'"$NEW_ACCESS_CODE"'",
                 "target": ["production", "preview", "development"]
               }')
+        echo "Response: $response"
         if [ "$response" -ne 200 ]; then
           echo "Failed to update environment variable. Status code: $response"
           exit 1
@@ -46,12 +50,14 @@ jobs:
         VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
       run: |
+        echo "Triggering redeployment for Vercel Project ID: $VERCEL_PROJECT_ID"
         response=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "https://api.vercel.com/v13/deployments" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'"
               }')
+        echo "Response: $response"
         if [ "$response" -ne 201 ]; then
           echo "Failed to trigger redeployment. Status code: $response"
           exit 1

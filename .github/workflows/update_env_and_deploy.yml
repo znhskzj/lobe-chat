@@ -73,7 +73,9 @@ jobs:
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
-                "project": "'$VERCEL_PROJECT_ID'"
+                "project": "'$VERCEL_PROJECT_ID'",
+                "name": "my-deployment",
+                "target": "production"
               }')
         echo "Response: $response"
         if [ "$response" -ne 201 ]; then

@@ -20,38 +20,21 @@ jobs:
         echo "new_access_code=$new_access_code" >> $GITHUB_ENV
         echo "The new access code is $new_access_code"  # 输出到日志
 
-    - name: Get environment variable ID
-      id: get-env-id
-      env:
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
-        VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
-      run: |
-        response=$(curl -s -X GET "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env" \
-          -H "Authorization: Bearer $VERCEL_API_TOKEN" \
-          -H "Content-Type: application/json")
-        echo "Response: $response"
-        env_id=$(echo $response | jq -r '.envs[] | select(.key=="ACCESS_CODE") | .id')
-        if [ -z "$env_id" ]; then
-          echo "Failed to get environment variable ID"
-          exit 1
-        fi
-        echo "env_id=$env_id" >> $GITHUB_ENV
-
     - name: Update Vercel Project environment variable
       id: update-env
       env:
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
         NEW_ACCESS_CODE: ${{ env.new_access_code }}
-        ENV_ID: ${{ env.env_id }}
       run: |
         echo "Updating Vercel Project ID: $VERCEL_PROJECT_ID"
         echo "Using API Token: $VERCEL_API_TOKEN"
         echo "New Access Code: $NEW_ACCESS_CODE"
-        response=$(curl -s -o /dev/stderr -w "%{http_code}" -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/$ENV_ID" \
+        response=$(curl -s -o /dev/stderr -w "%{http_code}" -X PATCH "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env/ACCESS_CODE" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
+                "key": "ACCESS_CODE",
                 "value": "'"$NEW_ACCESS_CODE"'",
                 "target": ["production", "preview", "development"]
               }')
@@ -65,22 +48,13 @@ jobs:
     - name: Trigger redeployment for Vercel project
       run: |
         echo "Triggering redeployment for Vercel Project ID: $VERCEL_PROJECT_ID"
-        # 假设你需要部署根目录下的 'index.html'
-        file_data=$(curl -s --upload-file ./index.html https://file.io)
-        file_url=$(echo $file_data | jq -r '.link')  # 提取文件上传后的 URL
         response=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "https://api.vercel.com/v13/deployments" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json" \
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'",
                 "name": "my-deployment",
-                "target": "production",
-                "files": [{
-                  "file": "index.html",
-                  "sha": "$(sha256sum ./index.html | cut -d" " -f1)",
-                  "size": "$(stat -c %s ./index.html)",
-                  "mode": "100644"
-                }]
+                "target": "production"
               }')
         echo "Response: $response"
         if [ "$response" -ne 201 ]; then
@@ -88,10 +62,6 @@ jobs:
           exit 1
         fi
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
-      env:
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
-
 
     - name: Send email with new access code
       if: success() # 只有在前面的步骤成功时才发送邮件

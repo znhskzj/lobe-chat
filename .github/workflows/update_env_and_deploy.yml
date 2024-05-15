@@ -75,7 +75,8 @@ jobs:
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'",
                 "name": "my-deployment",
-                "target": "production"
+                "target": "production",
+                "files": ["/"]
               }')
         echo "Response: $response"
         if [ "$response" -ne 201 ]; then
@@ -83,6 +84,7 @@ jobs:
           exit 1
         fi
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
+
 
     - name: Send email with new access code
       if: success() # 只有在前面的步骤成功时才发送邮件

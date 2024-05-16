@@ -29,7 +29,7 @@ jobs:
         response=$(curl -s -X GET "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env" \
           -H "Authorization: Bearer $VERCEL_API_TOKEN" \
           -H "Content-Type: application/json")
-        echo "Response: $response"
+        echo "Full Response: $response"
         env_id=$(echo $response | jq -r '.envs[] | select(.key=="ACCESS_CODE") | .id')
         if [ -z "$env_id" ]; then
           echo "Failed to get environment variable ID"
@@ -55,7 +55,7 @@ jobs:
                 "value": "'"$NEW_ACCESS_CODE"'",
                 "target": ["production", "preview", "development"]
               }')
-        echo "Response: $response"
+        echo "Full Response for Update: $response"
         if [ "$response" -ne 200 ]; then
           echo "Failed to update environment variable. Status code: $response"
           exit 1
@@ -70,18 +70,15 @@ jobs:
           -H "Content-Type: application/json" \
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'",
-                "name": "my-deployment"
+                "name": "my-deployment",
+                "target": "production"
               }')
-        echo "Response: $response"
+        echo "Full Response for Deployment: $response"
         if [ "$response" -ne 201 ]; then
           echo "Failed to trigger redeployment. Status code: $response"
           exit 1
         fi
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
-      env:
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
-        new_access_code: ${{ env.new_access_code }}
-
 
     - name: Send email with new access code
       if: success() # 只有在前面的步骤成功时才发送邮件
@@ -94,4 +91,4 @@ jobs:
         subject: "New Access Code for Vercel Project"
         to: ${{ secrets.ADMIN_EMAIL }}
         body: "The new access code is ${{ env.new_access_code }}"
-        from: ${{ secrets.EMAIL_FROM }}
+        from: ${{ secrets.EMAIL_FROM

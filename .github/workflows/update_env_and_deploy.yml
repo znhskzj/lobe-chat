@@ -70,8 +70,7 @@ jobs:
           -H "Content-Type: application/json" \
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'",
-                "name": "my-deployment",
-                "target": "production"
+                "name": "my-deployment"
               }')
         echo "Response: $response"
         if [ "$response" -ne 201 ]; then

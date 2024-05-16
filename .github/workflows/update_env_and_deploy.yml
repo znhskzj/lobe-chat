@@ -79,6 +79,9 @@ jobs:
           exit 1
         fi
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
+      env:
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
+        new_access_code: ${{ env.new_access_code }}
 
     - name: Send email with new access code
       if: success() # 只有在前面的步骤成功时才发送邮件

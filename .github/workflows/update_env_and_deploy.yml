@@ -91,4 +91,4 @@ jobs:
         subject: "New Access Code for Vercel Project"
         to: ${{ secrets.ADMIN_EMAIL }}
         body: "The new access code is ${{ env.new_access_code }}"
-        from: ${{ secrets.EMAIL_FROM
+        from: ${{ secrets.EMAIL_FROM}}

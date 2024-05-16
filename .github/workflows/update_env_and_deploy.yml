@@ -66,7 +66,7 @@ jobs:
       run: |
         echo "Triggering redeployment for Vercel Project ID: $VERCEL_PROJECT_ID"
         response=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST "https://api.vercel.com/v13/deployments" \
-          -H "Authorization: Bearer $VERCEL_API_TOKEN" \
+          -H "Authorization: Bearer ${{ secrets.VERCEL_API_TOKEN }}" \
           -H "Content-Type: application/json" \
           -d '{
                 "project": "'$VERCEL_PROJECT_ID'",
@@ -79,6 +79,10 @@ jobs:
           exit 1
         fi
         echo "Triggered redeployment for Vercel project with ID: $VERCEL_PROJECT_ID"
+      env:
+        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_1 }}
+        new_access_code: ${{ env.new_access_code }}
+
 
     - name: Send email with new access code
       if: success() # 只有在前面的步骤成功时才发送邮件

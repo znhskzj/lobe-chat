@@ -71,7 +71,8 @@ jobs:
           -d '{
                 "project": "${{ secrets.VERCEL_PROJECT_ID_1 }}",
                 "name": "my-deployment",
-                "target": "production"
+                "target": "production",
+                "files": []
               }')
         echo "Full Response for Deployment: $response"
         if [ "$response" -ne 201 ]; then

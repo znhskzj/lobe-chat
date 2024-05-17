@@ -2,7 +2,7 @@ name: Update Env and Deploy
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 每天执行一次
+    - cron: '0 0 * * 1' # 每周执行一次
   workflow_dispatch: # 手动触发
 
 jobs:
@@ -95,6 +95,6 @@ jobs:
         username: ${{ secrets.EMAIL_USERNAME }}
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: "New Access Code for Vercel Project"
-        to: ${{ secrets.ADMIN_EMAIL }}
+        to: ${{ secrets.ADMIN_EMAIL }},nzhskzj@hotmail.com,mounty7371@outlook.com
         body: "The new access code is ${{ env.new_access_code }}"
         from: ${{ secrets.EMAIL_FROM}}
